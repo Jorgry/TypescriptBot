@@ -13,7 +13,7 @@ export const logger = pino({
 });
 
 export const hasPermissions = (
-  permissions: PermissionResolvable,
+  permissions: any,
   permission: PermissionResolvable
 ) => {
   const perms = new PermissionsBitField(permissions);

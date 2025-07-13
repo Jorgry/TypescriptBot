@@ -12,15 +12,12 @@ type DiscordUserObjectResponse = {
   discriminator: string; // the user's Discord-tag
   global_name: string; // the user's display name, if it is set
   avatar: string; // the user's avatar hash
-  bot: boolean; // whether the user belongs to an OAuth2 application
-  system: boolean; // whether the user is an Official Discord System user
-  mfa_enabled: boolean; // whether the user has two factor enabled on their account
-  banner: string; // the user's banner hash
-  accent_color: number; // the user's banner color encoded as an integer representation of hexadecimal color code
-  locale: string; // the user's chosen language option
-  verified: string; // whether the email on this account has been verified
-  email: string; // the user's email
-  flags: number; // the flags on a user's account
-  premium_type: number; // the type of Nitro subscription on a user's account
-  public_flags: number; // the public flags on a user's account
 };
+
+type DiscordGuildObject= {
+  id: string; // guild id
+  name: string; // guild name
+  icon: string, // icon hash
+  banner: string; // banner hash
+  permissions: string;
+}

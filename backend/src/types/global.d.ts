@@ -22,4 +22,5 @@ type DiscordGuildObject= {
   permissions: string;
 
   premium: boolean; // Custom property for premium features for the bot.
+  botInvited: boolean // whether or not the bot is in the guild  
 }

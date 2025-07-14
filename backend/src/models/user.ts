@@ -3,6 +3,8 @@ import { model, Schema, type InferSchemaType } from "mongoose";
 const UserSchema = new Schema({
   id: { type: String, required: true },
   username: { type: String, required: true },
+  discrimator: { type: String, required: true },
+  global_name: { type: String, required: true },
   avatarHash: { type: String, default: null },
   accessToken: { type: String, required: true },
   refreshToken: { type: String, required: true },

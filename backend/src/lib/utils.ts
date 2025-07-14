@@ -77,7 +77,6 @@ export const getUser = async (userId: string) => {
   const user = {
     id: userDoc.id,
     username: userDoc.username,
-    discriminator: userDoc.discriminator,
     global_name: userDoc.global_name,
     avatarHash: userDoc.avatarHash,
     accessToken: userDoc.accessToken,

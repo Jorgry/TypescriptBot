@@ -73,7 +73,6 @@ app.get("/callback", async (c) => {
     user = new User({
       id: userResJson.id,
       username: userResJson.username,
-      discriminator: userResJson.discriminator,
       global_name: userResJson.global_name,
       avatarHash: userResJson.avatar,
       accessToken: oauthResJson.access_token,
@@ -81,7 +80,6 @@ app.get("/callback", async (c) => {
     });
   } else {
     user.username = userResJson.username;
-    user.discriminator = userResJson.discriminator;
     user.global_name = userResJson.global_name;
     user.avatarHash = userResJson.avatar;
     user.accessToken = oauthResJson.access_token;

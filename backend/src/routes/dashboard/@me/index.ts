@@ -3,6 +3,7 @@ import type { PermissionResolvable } from "discord.js";
 import { Hono } from "hono";
 import { DISCORD_ENDPOINT } from "~/constants";
 import { hasPermissions } from "~/lib/utils";
+import { PremiumGuilds } from "~/models";
 
 const app = new Hono();
 
@@ -23,7 +24,6 @@ app.get("/guilds", async (c) => {
 
   if (!skipCache) {
     const redisCacheRes = await redis.get(`user-guilds:${user.id}`);
-
     if (redisCacheRes) return c.json(JSON.parse(redisCacheRes), 200);
   }
 
@@ -39,13 +39,69 @@ app.get("/guilds", async (c) => {
 
   const guildResJson = (await guildRes.json()) as DiscordGuildObject[];
 
-  const guilds = guildResJson.filter((guild) =>
+  const filteredGuilds = guildResJson.filter((guild) =>
     hasPermissions(guild.permissions, "ManageGuild")
   );
 
-  await redis.set(`user-guilds:${user.id}`, JSON.stringify(guilds), "EX", 600);
+  const premiumGuilds = await PremiumGuilds.find({
+    guildId: { $in: filteredGuilds.map((g) => g.id) },
+  });
 
-  return c.json(guilds, 200);
+  const premiumIds = new Set(premiumGuilds.map((g) => g.guildId));
+
+  const enrichedGuilds = filteredGuilds.map((guild) => ({
+    ...guild,
+    premium: premiumIds.has(guild.id),
+  }));
+
+  await redis.set(
+    `user-guilds:${user.id}`,
+    JSON.stringify(enrichedGuilds),
+    "EX",
+    600
+  );
+
+  return c.json(enrichedGuilds, 200);
+});
+
+// for testing
+type PlanType = "monthly" | "lifetime";
+const validPlans = ["monthly", "lifetime"] as const;
+
+app.get("/set-premium", async (c) => {
+  const guildId = c.req.query("guildId");
+  const plan = c.req.query("plan");
+  const expiresAtRaw = c.req.query("expiration");
+
+  if (!guildId || !plan || !validPlans.includes(plan as PlanType)) {
+    return c.json({ error: "Invalid parameters" }, 400);
+  }
+
+  let expiresAt: Date | undefined;
+  if (expiresAtRaw) {
+    const parsedDate = new Date(expiresAtRaw);
+    if (isNaN(parsedDate.getTime())) {
+      return c.json({ error: "Invalid expiration date" }, 400);
+    }
+    expiresAt = parsedDate;
+  }
+
+  let guild = await PremiumGuilds.findOne({ guildId });
+
+  if (!guild) {
+    guild = new PremiumGuilds({
+      guildId,
+      plan: plan as PlanType,
+      ...(expiresAt && { expiresAt }), // conditionally add if exists
+    });
+  } else {
+    guild.plan = plan as PlanType;
+    if (expiresAt) guild.expiresAt = expiresAt;
+  }
+
+  await guild.save();
+
+  return c.json({ message: "Premium status updated", guild }, 200);
 });
 
 export default app;

@@ -2,7 +2,8 @@ import { redis } from "bun";
 import type { PermissionResolvable } from "discord.js";
 import { Hono } from "hono";
 import { DISCORD_ENDPOINT } from "~/constants";
-import { hasPermissions } from "~/lib/utils";
+import { env } from "~/env";
+import { hasPermissions, logger } from "~/lib/utils";
 import { PremiumGuilds } from "~/models";
 
 const app = new Hono();
@@ -39,6 +40,22 @@ app.get("/guilds", async (c) => {
 
   const guildResJson = (await guildRes.json()) as DiscordGuildObject[];
 
+  const botGuildsRes = await fetch(`${DISCORD_ENDPOINT}/users/@me/guilds`, {
+    method: "GET",
+    headers: {
+  Authorization: `Bot ${env.DISCORD_APPLICATION_TOKEN}`,
+},
+  });
+
+  if (!botGuildsRes.ok) {
+    const errorMsg = await botGuildsRes.text();
+    logger.error(errorMsg);
+    return c.json({ error: "Failed to fetch bot guilds" }, 500);
+  }
+
+  const botGuilds = (await botGuildsRes.json()) as DiscordGuildObject[];
+  const botGuildIds = new Set(botGuilds.map((g) => g.id));
+
   const filteredGuilds = guildResJson.filter((guild) =>
     hasPermissions(guild.permissions, "ManageGuild")
   );
@@ -52,6 +69,7 @@ app.get("/guilds", async (c) => {
   const enrichedGuilds = filteredGuilds.map((guild) => ({
     ...guild,
     premium: premiumIds.has(guild.id),
+    botInvited: botGuildIds.has(guild.id),
   }));
 
   await redis.set(

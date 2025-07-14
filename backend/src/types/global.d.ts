@@ -20,4 +20,6 @@ type DiscordGuildObject= {
   icon: string, // icon hash
   banner: string; // banner hash
   permissions: string;
+
+  premium: boolean; // Custom property for premium features for the bot.
 }

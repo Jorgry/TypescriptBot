@@ -11,10 +11,10 @@ import { User } from "~/models";
 import { deleteCookie, setCookie } from "hono/cookie";
 
 /*
-* [GET] http://localhost:3000/api/auth/signin
-* [GET] http://localhost:3000/api/auth/callback
-* [GET] http://localhost:3000/api/auth/signout
-*/
+ * [GET] http://localhost:3000/api/auth/signin
+ * [GET] http://localhost:3000/api/auth/callback
+ * [GET] http://localhost:3000/api/auth/signout
+ */
 
 const app = new Hono();
 
@@ -73,12 +73,16 @@ app.get("/callback", async (c) => {
     user = new User({
       id: userResJson.id,
       username: userResJson.username,
+      discrimator: userResJson.discriminator,
+      global_name: userResJson.global_name,
       avatarHash: userResJson.avatar,
       accessToken: oauthResJson.access_token,
       refreshToken: oauthResJson.refresh_token,
     });
   } else {
     user.username = userResJson.username;
+    user.discrimator = userResJson.discriminator;
+    user.global_name = userResJson.global_name;
     user.avatarHash = userResJson.avatar;
     user.accessToken = oauthResJson.access_token;
     user.refreshToken = oauthResJson.refresh_token;
